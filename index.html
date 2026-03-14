@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jorge Dev Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6a9d;
+    --accent3: #6affb8;
+    --text: #e8e8f0;
+    --text-muted: #6a6a8a;
+    --warning: #ffb86a;
+    --phase-colors: #7c6aff, #ff6a9d, #6affb8, #ffb86a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p { color: var(--text-muted); font-size: 13px; margin-top: 6px; font-family: 'Space Mono', monospace; }
+
+  .streak-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .streak-badge:hover { border-color: var(--warning); }
+  .streak-badge .fire { font-size: 24px; }
+  .streak-badge .streak-num { font-size: 22px; font-weight: 800; color: var(--warning); line-height: 1; }
+  .streak-badge .streak-label { font-size: 10px; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-top: 2px; }
+
+  /* OVERALL PROGRESS */
+  .overall-progress {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .overall-progress .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .overall-progress .label { font-size: 11px; color: var(--text-muted); font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
+  .overall-progress .pct { font-size: 28px; font-weight: 800; color: var(--accent); }
+  .bar-track { height: 8px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+
+  /* QUOTE */
+  .quote-card {
+    background: linear-gradient(135deg, rgba(124,106,255,0.08), rgba(255,106,157,0.06));
+    border: 1px solid rgba(124,106,255,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    position: relative;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .quote-card:hover { border-color: rgba(124,106,255,0.4); }
+  .quote-card::before { content: '"'; font-size: 32px; color: var(--accent); line-height: 0; position: relative; top: 10px; margin-right: 4px; font-style: normal; }
+  .quote-card .refresh-hint { font-size: 10px; color: var(--text-muted); margin-top: 6px; font-style: normal; font-family: 'Space Mono', monospace; opacity: 0.5; }
+
+  /* PHASE TABS */
+  .phase-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .phase-tabs::-webkit-scrollbar { display: none; }
+  .phase-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+  }
+  .phase-tab:hover { border-color: var(--accent); color: var(--text); }
+  .phase-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .phase-tab.done { border-color: var(--accent3); color: var(--accent3); }
+
+  /* PHASE CARD */
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .phase-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .phase-info { flex: 1; min-width: 0; }
+  .phase-info h2 { font-size: 16px; font-weight: 800; }
+  .phase-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .phase-progress-mini { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .phase-progress-mini .mini-pct { font-size: 13px; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .phase-progress-mini .mini-bar { width: 60px; height: 4px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .phase-progress-mini .mini-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+
+  /* TOPICS */
+  .topics-list { padding: 8px; }
+  .topic-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .topic-item:hover { background: var(--surface2); }
+  .topic-item.active-topic { background: rgba(124,106,255,0.08); }
+
+  .topic-check {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .topic-check.done { background: var(--accent3); border-color: var(--accent3); color: #0a0a0f; font-weight: 700; }
+  .topic-check.in-progress { background: var(--warning); border-color: var(--warning); color: #0a0a0f; font-size: 10px; }
+
+  .topic-content { flex: 1; min-width: 0; }
+  .topic-content h3 { font-size: 14px; font-weight: 700; }
+  .topic-content p { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+  .topic-content .topic-time { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--text-muted); margin-top: 4px; opacity: 0.6; }
+
+  .topic-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  /* TOPIC DETAIL MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 860px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px 24px 40px;
+    transform: translateY(40px);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 99px; margin: 0 auto 20px; }
+  .modal h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .modal .modal-subtitle { font-size: 12px; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-bottom: 20px; }
+
+  .modal-section { margin-bottom: 20px; }
+  .modal-section h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-bottom: 10px; }
+
+  .challenge-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .challenge-card h5 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .challenge-card p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .challenge-card .time-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin-top: 8px;
+  }
+
+  .notes-area {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .notes-area:focus { border-color: var(--accent); }
+  .notes-area::placeholder { color: var(--text-muted); }
+
+  .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+  .btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-success { background: var(--accent3); color: #0a0a0f; }
+  .btn-success:hover { opacity: 0.85; }
+  .btn-warning { background: var(--warning); color: #0a0a0f; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--accent3); color: var(--accent3); }
+  .toast.streak { border-color: var(--warning); color: var(--warning); }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-card .stat-val { font-size: 22px; font-weight: 800; }
+  .stat-card .stat-lbl { font-size: 10px; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-top: 4px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 500px) {
+    .phase-header { flex-wrap: wrap; }
+    .stats-row { grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .stat-card { padding: 10px 8px; }
+    .stat-card .stat-val { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <h1>Jorge <span>Dev</span> Path</h1>
+      <p>// roadmap · dev & infraestructura</p>
+    </div>
+    <div class="streak-badge" onclick="showStreakInfo()">
+      <div class="fire">🔥</div>
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">días seguidos</div>
+    </div>
+  </header>
+
+  <!-- OVERALL PROGRESS -->
+  <div class="overall-progress">
+    <div class="top">
+      <span class="label">Progreso total</span>
+      <span class="pct" id="totalPct">0%</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="totalBar" style="width:0%"></div></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="statDone" style="color:var(--accent3)">0</div>
+      <div class="stat-lbl">completados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statInProgress" style="color:var(--warning)">0</div>
+      <div class="stat-lbl">en progreso</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statPending" style="color:var(--text-muted)">0</div>
+      <div class="stat-lbl">pendientes</div>
+    </div>
+  </div>
+
+  <!-- QUOTE -->
+  <div class="quote-card" onclick="rotateQuote()" id="quoteCard">
+    <span id="quoteText">El progreso, no la perfección. Cada línea de código que escribes hoy es una que no sabías escribir ayer.</span>
+    <div class="refresh-hint">↻ toca para cambiar frase</div>
+  </div>
+
+  <!-- PHASE TABS -->
+  <div class="phase-tabs" id="phaseTabs"></div>
+
+  <!-- PHASE CONTENT -->
+  <div id="phaseContent"></div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modalTitle"></h2>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const ROADMAP = [
+  {
+    id: 'p1',
+    title: 'Python Fundamentos',
+    icon: '🐍',
+    color: '#7c6aff',
+    desc: 'El puente desde bash/PowerShell al desarrollo real',
+    months: '2–3 meses',
+    topics: [
+      { id: 't1_1', title: 'Variables y tipos de datos', desc: 'Enteros, strings, listas, diccionarios. Igual que bash pero más potente.', time: '~20 min', tag: 'base', challenges: [
+        { title: 'Script: Info del sistema', desc: 'Crea un script que imprima: nombre del servidor, fecha y hora actual, y tu nombre. Usa variables para todo.', time: '15 min' },
+        { title: 'Conversor de unidades', desc: 'Convierte MB a GB y GB a TB. Pide el valor al usuario con input().', time: '20 min' }
+      ]},
+      { id: 't1_2', title: 'Condicionales y loops', desc: 'if/else, for, while. Ya los usas en bash, ahora en Python.', time: '~25 min', tag: 'base', challenges: [
+        { title: 'Validador de contraseña', desc: 'Pide una contraseña. Si tiene menos de 8 caracteres, dile al usuario que es muy corta. Repite hasta que sea válida.', time: '20 min' },
+        { title: 'Tabla de multiplicar', desc: 'Genera la tabla del 1 al 10 usando un loop for anidado.', time: '15 min' }
+      ]},
+      { id: 't1_3', title: 'Funciones', desc: 'Reutilizar código. Crear tus propias herramientas.', time: '~25 min', tag: 'base', challenges: [
+        { title: 'Función: calcular_uptime()', desc: 'Crea una función que reciba horas y retorne "X días, Y horas". Pruébala con distintos valores.', time: '20 min' },
+        { title: 'Función: formatear_bytes()', desc: 'Recibe bytes y devuelve la unidad más legible (KB, MB, GB). Como lo muestra df -h.', time: '20 min' }
+      ]},
+      { id: 't1_4', title: 'Manejo de archivos', desc: 'Leer, escribir, mover archivos. Automatización real.', time: '~30 min', tag: 'práctica', challenges: [
+        { title: 'Log reader', desc: 'Lee un archivo .txt de logs y cuenta cuántas líneas contienen la palabra "ERROR".', time: '20 min' },
+        { title: 'Generador de reporte', desc: 'Lee un CSV de tickets y escribe un resumen .txt con el total por categoría.', time: '25 min' }
+      ]},
+      { id: 't1_5', title: 'Librerías: os y sys', desc: 'Interactuar con el sistema operativo. Reemplaza scripts bash.', time: '~25 min', tag: 'práctica', challenges: [
+        { title: 'Inventory script', desc: 'Lista todos los archivos .log en una carpeta y muestra su tamaño en KB.', time: '20 min' },
+        { title: 'Limpiador de carpetas', desc: 'Mueve archivos .bak a una carpeta /backup automáticamente.', time: '20 min' }
+      ]},
+      { id: 't1_6', title: 'Pandas: leer Excel/CSV', desc: 'Analizar datos de tickets. El salto que cambia todo.', time: '~35 min', tag: 'proyecto', challenges: [
+        { title: 'Análisis de tickets', desc: 'Carga tu Excel de tickets. Muestra: total de tickets, top 3 categorías, tickets por técnico.', time: '30 min' },
+        { title: 'Reporte automático', desc: 'Genera un resumen semanal en texto plano desde el Excel de tickets.', time: '25 min' }
+      ]},
+      { id: 't1_7', title: 'Proyecto: Generador de reporte semanal', desc: 'Automatiza tu reporte del jueves. Script completo de Python.', time: '~2–3 hrs', tag: 'proyecto', challenges: [
+        { title: 'Reporte completo', desc: 'Script que lee Excel → filtra semana actual → genera resumen → guarda como .txt o .md listo para copiar al PPT.', time: '2 hrs' }
+      ]}
+    ]
+  },
+  {
+    id: 'p2',
+    title: 'Web: HTML, CSS, JS',
+    icon: '🌐',
+    color: '#ff6a9d',
+    desc: 'Darle cara a tus herramientas',
+    months: '2–3 meses',
+    topics: [
+      { id: 't2_1', title: 'HTML: estructura de una página', desc: 'Tags, encabezados, tablas, formularios. La base de todo.', time: '~20 min', tag: 'base', challenges: [
+        { title: 'Página de perfil', desc: 'Crea una página HTML con tu nombre, tu rol en Seguritech, y una lista de tecnologías que manejas.', time: '20 min' }
+      ]},
+      { id: 't2_2', title: 'CSS: estilos y layout', desc: 'Colores, fuentes, espaciado, flexbox. Que se vea bien.', time: '~30 min', tag: 'base', challenges: [
+        { title: 'Dashboard esqueleto', desc: 'Diseña el layout de un dashboard con sidebar, header y área de contenido. Sin datos todavía.', time: '30 min' }
+      ]},
+      { id: 't2_3', title: 'JavaScript básico', desc: 'Variables, funciones, eventos. Hacer que las cosas pasen.', time: '~30 min', tag: 'base', challenges: [
+        { title: 'Botón de toggle', desc: 'Un botón que al hacer click cambia el texto de "Activo" a "Inactivo" y el color del fondo.', time: '15 min' }
+      ]},
+      { id: 't2_4', title: 'JavaScript: DOM y eventos', desc: 'Manipular la página en tiempo real. Filtros, clicks, updates.', time: '~35 min', tag: 'práctica', challenges: [
+        { title: 'Tabla filtrable', desc: 'Una tabla de tickets con un input de búsqueda que filtra en tiempo real por descripción.', time: '30 min' }
+      ]},
+      { id: 't2_5', title: 'Fetch API: consumir datos', desc: 'Pedir datos a un servidor o API externa. El puente backend-frontend.', time: '~30 min', tag: 'práctica', challenges: [
+        { title: 'Dashboard de clima', desc: 'Muestra el clima actual de Juárez/Chihuahua consumiendo una API pública gratuita.', time: '25 min' }
+      ]},
+      { id: 't2_6', title: 'Proyecto: Dashboard de tickets', desc: 'Dashboard web que muestra las métricas de tu equipo en tiempo real.', time: '~3–4 hrs', tag: 'proyecto', challenges: [
+        { title: 'Dashboard completo', desc: 'Carga un JSON de tickets y muestra: totales, gráficas por categoría, tabla filtrable. Todo en una página HTML.', time: '3 hrs' }
+      ]}
+    ]
+  },
+  {
+    id: 'p3',
+    title: 'Backend con Python',
+    icon: '⚙️',
+    color: '#6affb8',
+    desc: 'APIs, servidores y automatización real',
+    months: '2–3 meses',
+    topics: [
+      { id: 't3_1', title: 'Qué es una API REST', desc: 'Conceptos: endpoints, métodos HTTP, JSON. La lengua del backend.', time: '~20 min', tag: 'base', challenges: [
+        { title: 'Consumir API', desc: 'Usa requests para consultar una API pública (JSONPlaceholder) y mostrar los resultados en consola.', time: '20 min' }
+      ]},
+      { id: 't3_2', title: 'FastAPI: tu primer endpoint', desc: 'Crea una API en minutos. El framework más moderno y sencillo.', time: '~35 min', tag: 'base', challenges: [
+        { title: 'API hola mundo', desc: 'Endpoint GET /status que retorna: {"servidor":"planta-interna","estado":"ok","hora":"..."}', time: '20 min' }
+      ]},
+      { id: 't3_3', title: 'Bases de datos con SQLite', desc: 'Guardar datos sin instalar nada extra. Perfecto para empezar.', time: '~40 min', tag: 'práctica', challenges: [
+        { title: 'CRUD de tickets', desc: 'API que permite crear, leer, actualizar y eliminar tickets. Datos guardados en SQLite.', time: '45 min' }
+      ]},
+      { id: 't3_4', title: 'Conectar frontend + backend', desc: 'Tu HTML consume tu propia API. El momento que todo tiene sentido.', time: '~45 min', tag: 'práctica', challenges: [
+        { title: 'Dashboard conectado', desc: 'Conecta tu dashboard HTML de la Fase 2 a tu API de FastAPI. Datos reales.', time: '1 hr' }
+      ]},
+      { id: 't3_5', title: 'Proyecto: Portal interno Planta Interna', desc: 'App web completa: tickets, estado del equipo, métricas.', time: '~5–6 hrs', tag: 'proyecto', challenges: [
+        { title: 'Portal completo', desc: 'Backend FastAPI + Frontend HTML/JS + SQLite. Ver tickets, filtrar, actualizar estado. Tu primera app real.', time: '6 hrs' }
+      ]}
+    ]
+  },
+  {
+    id: 'p4',
+    title: 'Deploy en Servidor',
+    icon: '🚀',
+    color: '#ffb86a',
+    desc: 'Tu app en producción, en tu propio servidor',
+    months: '1–2 meses',
+    topics: [
+      { id: 't4_1', title: 'Linux para desarrolladores', desc: 'Permisos, procesos, servicios. Lo que ya sabes, ahora para apps.', time: '~20 min', tag: 'base', challenges: [
+        { title: 'Correr app como servicio', desc: 'Configura systemd para que tu API de FastAPI arranque automáticamente al reiniciar el servidor.', time: '30 min' }
+      ]},
+      { id: 't4_2', title: 'Nginx como proxy inverso', desc: 'Exponer tu app al mundo (o a tu red interna) de forma profesional.', time: '~30 min', tag: 'práctica', challenges: [
+        { title: 'Config Nginx', desc: 'Configura Nginx para que /api apunte a FastAPI y / sirva tu frontend HTML.', time: '30 min' }
+      ]},
+      { id: 't4_3', title: 'Docker básico', desc: 'Empaquetar tu app para que corra igual en cualquier servidor.', time: '~40 min', tag: 'práctica', challenges: [
+        { title: 'Dockerfile básico', desc: 'Crea un Dockerfile para tu API FastAPI. Construye la imagen y córrela como contenedor.', time: '40 min' }
+      ]},
+      { id: 't4_4', title: 'GitHub Actions: CI/CD básico', desc: 'Auto-despliegue cuando haces push. Desarrollo profesional.', time: '~45 min', tag: 'proyecto', challenges: [
+        { title: 'Pipeline básico', desc: 'Configura un Action que al hacer push al repositorio, ejecute tests básicos automáticamente.', time: '45 min' }
+      ]},
+      { id: 't4_5', title: 'Proyecto Final: App en producción', desc: 'Todo junto. App corriendo en tu servidor Ubuntu, con dominio interno.', time: '~1 semana', tag: 'proyecto', challenges: [
+        { title: 'Deploy completo', desc: 'Tu portal de Planta Interna corriendo en producción: Ubuntu + Nginx + FastAPI + SQLite + systemd. Accesible desde la red interna de Seguritech.', time: '1 semana' }
+      ]}
+    ]
+  }
+];
+
+const QUOTES = [
+  'El progreso, no la perfección. Cada línea de código que escribes hoy es una que no sabías escribir ayer.',
+  'El TDAH no es un déficit de atención — es un exceso de atención en lo que importa. Enfócate en un reto a la vez.',
+  'Los mejores desarrolladores no memorizan código. Saben cómo buscar, preguntar y construir.',
+  'Tu experiencia en infraestructura ya te hace diferente. Entiendes servidores, redes y sistemas. Solo añades otro idioma.',
+  '15 minutos de práctica real valen más que 2 horas de ver tutoriales. Abre el editor.',
+  'No rompas la cadena. Un día, una pequeña cosa. Eso construye todo.',
+  'Los errores no son fracasos — son el compilador diciéndote exactamente qué aprender después.',
+  'Cada script que automatiza algo en tu trabajo es una victoria real. Eso es desarrollo.'
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let state = {
+  progress: {},   // topicId -> 'pending'|'in-progress'|'done'
+  notes: {},      // topicId -> string
+  streak: 0,
+  lastActive: null,
+  activePhase: 'p1',
+  quoteIndex: 0
+};
+
+// ─── STORAGE ────────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('jorge_dev_path', JSON.stringify(state)); } catch(e){}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem('jorge_dev_path');
+    if (raw) state = { ...state, ...JSON.parse(raw) };
+  } catch(e){}
+}
+
+// ─── STREAK ─────────────────────────────────────────────────────────────────
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (state.lastActive === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (state.lastActive === yesterday) {
+    state.streak = (state.streak || 0) + 1;
+    if (state.streak > 1) showToast(`🔥 ¡${state.streak} días seguidos!`, 'streak');
+  } else if (state.lastActive && state.lastActive !== today) {
+    state.streak = 1;
+  } else if (!state.lastActive) {
+    state.streak = 1;
+  }
+  state.lastActive = today;
+  save();
+}
+
+function showStreakInfo() {
+  showToast(`🔥 ${state.streak} días activo. ¡Sigue así, Jorge!`, 'streak');
+}
+
+// ─── PROGRESS CALC ──────────────────────────────────────────────────────────
+function calcProgress() {
+  let total = 0, done = 0, inProg = 0;
+  ROADMAP.forEach(phase => {
+    phase.topics.forEach(t => {
+      total++;
+      const s = state.progress[t.id];
+      if (s === 'done') done++;
+      else if (s === 'in-progress') inProg++;
+    });
+  });
+  return { total, done, inProg, pending: total - done - inProg };
+}
+
+function phaseProgress(phase) {
+  let total = phase.topics.length, done = 0;
+  phase.topics.forEach(t => { if (state.progress[t.id] === 'done') done++; });
+  return { total, done, pct: total ? Math.round(done / total * 100) : 0 };
+}
+
+// ─── RENDER ─────────────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('streakNum').textContent = state.streak || 0;
+
+  const { total, done, inProg, pending } = calcProgress();
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('totalPct').textContent = pct + '%';
+  document.getElementById('totalBar').style.width = pct + '%';
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statInProgress').textContent = inProg;
+  document.getElementById('statPending').textContent = pending;
+
+  renderTabs();
+  renderPhase();
+}
+
+function renderTabs() {
+  const container = document.getElementById('phaseTabs');
+  container.innerHTML = '';
+  ROADMAP.forEach(phase => {
+    const { pct } = phaseProgress(phase);
+    const tab = document.createElement('div');
+    tab.className = 'phase-tab' +
+      (state.activePhase === phase.id ? ' active' : '') +
+      (pct === 100 ? ' done' : '');
+    tab.textContent = phase.icon + ' ' + phase.title;
+    tab.onclick = () => { state.activePhase = phase.id; save(); render(); };
+    container.appendChild(tab);
+  });
+}
+
+function renderPhase() {
+  const container = document.getElementById('phaseContent');
+  container.innerHTML = '';
+  const phase = ROADMAP.find(p => p.id === state.activePhase);
+  if (!phase) return;
+  const { pct } = phaseProgress(phase);
+
+  const card = document.createElement('div');
+  card.className = 'phase-card';
+  card.innerHTML = `
+    <div class="phase-header">
+      <div class="phase-icon" style="background:${phase.color}20">${phase.icon}</div>
+      <div class="phase-info">
+        <h2>${phase.title}</h2>
+        <p>${phase.desc} · ${phase.months}</p>
+      </div>
+      <div class="phase-progress-mini">
+        <span class="mini-pct" style="color:${phase.color}">${pct}%</span>
+        <div class="mini-bar"><div class="mini-fill" style="width:${pct}%;background:${phase.color}"></div></div>
+      </div>
+    </div>
+    <div class="topics-list" id="topicsList_${phase.id}"></div>
+  `;
+  container.appendChild(card);
+
+  const list = document.getElementById(`topicsList_${phase.id}`);
+  phase.topics.forEach((topic, i) => {
+    const s = state.progress[topic.id] || 'pending';
+    const item = document.createElement('div');
+    item.className = 'topic-item';
+    item.dataset.id = topic.id;
+
+    const tagColors = { base: phase.color + '33', práctica: '#ff6a9d33', proyecto: '#6affb833' };
+    const tagText = { base: 'BASE', práctica: 'PRÁCTICA', proyecto: 'PROYECTO' };
+    const tagFg = { base: phase.color, práctica: '#ff6a9d', proyecto: '#6affb8' };
+
+    item.innerHTML = `
+      <div class="topic-check ${s === 'done' ? 'done' : s === 'in-progress' ? 'in-progress' : ''}" 
+           data-id="${topic.id}" onclick="cycleStatus('${topic.id}', event)">
+        ${s === 'done' ? '✓' : s === 'in-progress' ? '▶' : ''}
+      </div>
+      <div class="topic-content">
+        <h3 style="${s === 'done' ? 'text-decoration:line-through;opacity:0.5' : ''}">${topic.title}</h3>
+        <p>${topic.desc}</p>
+        <div class="topic-time">⏱ ${topic.time} · ${topic.challenges.length} reto${topic.challenges.length > 1 ? 's' : ''}</div>
+      </div>
+      <span class="topic-tag" style="background:${tagColors[topic.tag]};color:${tagFg[topic.tag]}">${tagText[topic.tag]}</span>
+    `;
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.topic-check')) return;
+      openModal(phase, topic);
+    });
+    list.appendChild(item);
+  });
+}
+
+// ─── STATUS CYCLE ────────────────────────────────────────────────────────────
+function cycleStatus(topicId, e) {
+  e.stopPropagation();
+  const current = state.progress[topicId] || 'pending';
+  const next = current === 'pending' ? 'in-progress' : current === 'in-progress' ? 'done' : 'pending';
+  state.progress[topicId] = next;
+
+  if (next === 'in-progress') showToast('▶ Marcado como en progreso', '');
+  if (next === 'done') { showToast('✓ ¡Tema completado!', 'success'); updateStreak(); }
+  if (next === 'pending') showToast('↩ Marcado como pendiente', '');
+
+  save();
+  render();
+}
+
+// ─── MODAL ──────────────────────────────────────────────────────────────────
+let currentModalTopic = null;
+
+function openModal(phase, topic) {
+  currentModalTopic = topic;
+  document.getElementById('modalTitle').textContent = topic.title;
+  document.getElementById('modalSubtitle').textContent = `${phase.icon} ${phase.title} · ${topic.time}`;
+
+  const s = state.progress[topic.id] || 'pending';
+  const notes = state.notes[topic.id] || '';
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="modal-section">
+      <h4>🎯 Retos prácticos (15–20 min cada uno)</h4>
+      ${topic.challenges.map((c, i) => `
+        <div class="challenge-card">
+          <h5>${i + 1}. ${c.title}</h5>
+          <p>${c.desc}</p>
+          <span class="time-badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted)">⏱ ${c.time}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-section">
+      <h4>📝 Mis notas</h4>
+      <textarea class="notes-area" id="notesInput" placeholder="Escribe aquí tus notas, dudas, o lo que aprendiste...">${notes}</textarea>
+    </div>
+    <div class="modal-actions">
+      ${s !== 'in-progress' ? `<button class="btn btn-warning" onclick="setStatus('in-progress')">▶ En progreso</button>` : ''}
+      ${s !== 'done' ? `<button class="btn btn-success" onclick="setStatus('done')">✓ Completado</button>` : ''}
+      <button class="btn btn-ghost" onclick="saveNotes()">💾 Guardar notas</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+    </div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function setStatus(status) {
+  if (!currentModalTopic) return;
+  saveNotes();
+  state.progress[currentModalTopic.id] = status;
+  if (status === 'done') { showToast('✓ ¡Tema completado!', 'success'); updateStreak(); }
+  if (status === 'in-progress') showToast('▶ En progreso', '');
+  save();
+  closeModal();
+  render();
+}
+
+function saveNotes() {
+  if (!currentModalTopic) return;
+  const val = document.getElementById('notesInput')?.value;
+  if (val !== undefined) { state.notes[currentModalTopic.id] = val; save(); }
+}
+
+function closeModal() {
+  saveNotes();
+  document.getElementById('modalOverlay').classList.remove('open');
+  currentModalTopic = null;
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ─── QUOTE ──────────────────────────────────────────────────────────────────
+function rotateQuote() {
+  state.quoteIndex = (state.quoteIndex + 1) % QUOTES.length;
+  document.getElementById('quoteText').textContent = QUOTES[state.quoteIndex];
+  save();
+}
+
+// ─── TOAST ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+load();
+updateStreak();
+document.getElementById('quoteText').textContent = QUOTES[state.quoteIndex || 0];
+render();
+</script>
+</body>
+</html>
